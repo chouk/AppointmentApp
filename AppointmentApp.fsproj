@@ -5,10 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Data.fs" />
-    <Compile Include="Database.fs" />
-    <Compile Include="Appointments.fs" />
-    <Compile Include="Views.fs" />
+    <Compile Include="Domain\Domain.fs" />
+    <Compile Include="Persistence\Database.fs" />
+    <Compile Include="Features\AppointmentHandlers.fs" />
+    <Compile Include="Features\BlogHandlers.fs" />
+    <Compile Include="Features\PhotoHandlers.fs" />
+    <Compile Include="Web\Views.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

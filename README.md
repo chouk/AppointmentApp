@@ -1,13 +1,15 @@
-# Photography Session Appointment App
+# Lumina Studio Web App
 
-An F# web application built with Falco and ASP.NET Core for booking and viewing photography session appointments stored in SQL Server.
+An F# / Falco application for a photography studio (Lumina) featuring appointments, portfolio photo uploads, and a database‑backed blog with a lightweight admin area.
 
 ## Features
 
-- **Book Appointments**: Enter client name & session date/time
-- **View Appointments**: Shows all stored appointments (name + date/time)
-- **Clean UI**: Responsive design with simple styling
- - **SQL Persistence**: Appointments saved to SQL Server
+- **Modern Home Page**: Minimal hero & brand navigation
+- **Appointments**: Book + view photography session times
+- **Portfolio**: Upload images (stored on disk) & display in masonry-style grid
+- **Blog**: Create and read posts stored in SQL Server (slug-based)
+- **Admin**: Simple unprotected dashboard to add blog posts and upload photos
+- **SQL Persistence**: Appointments, BlogPosts, Photos tables auto-created on startup
 
 ## Technology Stack
 
@@ -16,18 +18,20 @@ An F# web application built with Falco and ASP.NET Core for booking and viewing 
 - **ASP.NET Core** - Web hosting
 - **.NET 9.0** - Runtime
 
-## Project Structure
+## Project Structure (Layered)
 
 ```
 AppointmentApp/
-├── Data.fs                    # Domain model (Appointment record)
-├── Database.fs                # SQL Server persistence (create/read/insert)
-├── Views.fs                   # HTML markup generation
-├── Appointments.fs            # Request handlers and business logic
-├── Program.fs                 # Application entry point and routing
-├── AppointmentApp.fsproj      # Project configuration
-└── wwwroot/
-    └── styles.css             # Application styling
+├── Domain/Domain.fs                 # Pure domain types (Appointment, BlogPost, Photo)
+├── Persistence/Database.fs          # DB ensure + CRUD modules (Appointments, Blog, Photos)
+├── Features/AppointmentHandlers.fs  # Appointment HTTP handlers
+├── Features/BlogHandlers.fs         # Blog list/detail + admin create
+├── Features/PhotoHandlers.fs        # Portfolio display + photo upload
+├── Web/Views.fs                     # Shared view/layout (home, appointment form, admin)
+├── Program.fs                       # Composition root (routing, startup)
+├── wwwroot/styles.css               # Global CSS (layout, hero, grid)
+├── wwwroot/uploads/                 # Stored photo files
+└── AppointmentApp.fsproj            # Project file
 ```
 
 ## Running the Application
@@ -40,26 +44,38 @@ AppointmentApp/
    ```
 4. Open your browser to `https://localhost:5001`
 
-## Usage
+## Key Endpoints
 
-1. **Book an appointment**: Fill in name and pick session date/time then submit
-2. **View appointments**: Click "View all appointments" to see list ordered by most recent session date
-3. **Navigate back**: Use the "Back to booking form" link to return to the booking page
+Public:
+- `/` – Home
+- `/appointments` – Booking form
+- `/appointments/all` – List all appointments
+- `/portfolio` – Portfolio grid
+- `/blog` – Blog index
+- `/blog/{slug}` – Blog post detail
+
+Admin (no auth yet):
+- `/admin` – Dashboard
+- `/admin/blog` – Create blog post (POST same URL)
+- `/admin/photos` – Upload photo (POST same URL)
 
 ## Architecture Notes
 
-- **Simple and Lightweight**: Uses minimal dependencies and clean F# code
-- **SQL Storage**: Appointments stored in dbo.Appointments (Id, Name, SessionDate)
-- **Functional Design**: Leverages F# functional programming patterns
-- **Type Safety**: Benefits from F#'s strong type system
-- **Modern Web Stack**: Built on ASP.NET Core with minimal API approach
+- **Layered**: Domain (pure), Persistence (infrastructure), Features (HTTP handlers), Web (views), Program (composition)
+- **Falco Markup** for strongly-typed HTML generation
+- **Minimal API** for route mapping
+- **Auto DB Provisioning** for three tables: Appointments, BlogPosts, Photos
+- **Static File Storage** for uploaded images (wwwroot/uploads)
 
 ## Potential Enhancements
 
-- Add edit/update & cancellation
-- Add authentication / admin interface
-- Add validation for session date (future only) & name length
-- Add paging / filtering by date range
+- Authentication & authorization (protect /admin)
+- Image dimension extraction & responsive srcset
+- Edit/delete blog posts and photos
+- Appointment cancellation & status workflow
+- Pagination for large blog/portfolio sets
+- Tagging & categorization
+- Slug auto-generation & uniqueness checks
 ## Database Setup
 
 The application will attempt to create the database (PhotoAppointments) and the table (dbo.Appointments) automatically if they do not exist. It uses the connection string in `appsettings.json` under `ConnectionStrings:DefaultConnection`.
@@ -78,23 +94,34 @@ To use LocalDB instead, change the connection string to:
 Server=(localdb)\\MSSQLLocalDB;Database=PhotoAppointments;Trusted_Connection=True;
 ```
 
-## Appointment Table Schema
+## Database Table Schemas (Simplified)
 
 ```
-CREATE TABLE dbo.Appointments (
-    Id INT IDENTITY(1,1) PRIMARY KEY,
-    Name NVARCHAR(200) NOT NULL,
-    SessionDate DATETIME2 NOT NULL
-);
+Appointments(Id INT IDENTITY PK, Name NVARCHAR(200), SessionDate DATETIME2)
+BlogPosts(Id INT IDENTITY PK, Slug NVARCHAR(200) UNIQUE, Title NVARCHAR(200), Excerpt NVARCHAR(1000), Content NVARCHAR(MAX), Published DATETIME2)
+Photos(Id INT IDENTITY PK, FileName NVARCHAR(260), Title NVARCHAR(200), Uploaded DATETIME2, Width INT, Height INT)
 ```
 
 ## Notes
 
-- All dates are stored in UTC or server local time (no conversion currently). Consider normalizing to UTC.
-- No input validation beyond non-empty name and parsable date – add stricter rules as needed.
-- For production, move DB creation into migrations and restrict permissions.
+* Dates stored as provided (normalize to UTC recommended)
+* Validation minimal (improve before production)
+* DB provisioning is ad-hoc; use migrations for production
+* Admin endpoints are open – secure before deployment
 
-- Add appointment cancellation
-- Implement user authentication
-- Add form validation
-- Include appointment categories or types
+## Photo Upload Notes
+
+- Files saved under `wwwroot/uploads` with GUID names.
+- Width/Height currently set to 0 (add image probing later).
+- Portfolio layout uses CSS multi-column masonry (`.grid`).
+
+## Running the Application
+
+```powershell
+# Build
+dotnet build
+# Run
+dotnet run
+# Browse (HTTPS by launch profile)
+https://localhost:5001/
+```
