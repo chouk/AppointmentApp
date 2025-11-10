@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Data.fs" />
+    <Compile Include="Database.fs" />
+    <Compile Include="Appointments.fs" />
+    <Compile Include="Views.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Falco" Version="5.*" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.*" />
+  </ItemGroup>
+
+</Project>
